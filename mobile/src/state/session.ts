@@ -7,7 +7,7 @@ import { resetAssistant } from './assistant';
 import { resetCvParser } from './cvParser';
 import { resetData } from './data';
 import { resetNotifications } from './notifications';
-import { resetProfile } from './profile';
+import { refreshProfileFromServer, resetProfile } from './profile';
 
 export interface SessionState {
   status: 'loading' | 'signedOut' | 'signedIn';
@@ -21,6 +21,7 @@ const USER_KEY = 'rolenest.user.v1';
 async function setSignedIn(user: UserRead) {
   session.set({ status: 'signedIn', user });
   await storage.setJSON(USER_KEY, user);
+  void refreshProfileFromServer();
 }
 
 /** Called once at launch: restore the session from the keychain without blocking on the network. */

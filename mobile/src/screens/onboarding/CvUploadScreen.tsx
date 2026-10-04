@@ -45,7 +45,7 @@ export function CvUpload({ mode }: { mode: 'onboarding' | 'app' }) {
       if (!okType) return setProblem(t('cv.wrongType'));
       if (f.size && f.size > MAX_BYTES) return setProblem(t('cv.tooBig'));
       haptics.tap();
-      void startCvParse({ name: f.name, size: f.size });
+      void startCvParse({ name: f.name, size: f.size, uri: f.uri, mimeType: f.mimeType });
     } catch {
       setProblem(t('cv.pickFailed'));
     }

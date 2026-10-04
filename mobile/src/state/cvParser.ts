@@ -15,7 +15,7 @@ export interface CvParserState {
 /** Lives outside any screen so parsing continues in the background. */
 export const cvParser = createStore<CvParserState>({ status: 'idle', progress: 0 });
 
-export async function startCvParse(file: { name: string; size?: number }) {
+export async function startCvParse(file: { name: string; size?: number; uri?: string; mimeType?: string }) {
   if (!isOnline()) {
     cvParser.set({ status: 'error', progress: 0, fileName: file.name, error: 'offline' });
     return;
@@ -27,8 +27,9 @@ export async function startCvParse(file: { name: string; size?: number }) {
     });
     setParsedCv(parsed);
     cvParser.set({ status: 'ready', progress: 1 });
-  } catch {
-    cvParser.set({ status: 'error', error: 'failed' });
+  } catch (e) {
+    // The server's explanation (wrong type, scanned image, too large) is shown as is.
+    cvParser.set({ status: 'error', error: e instanceof Error && e.message ? e.message : 'failed' });
   }
 }
 
