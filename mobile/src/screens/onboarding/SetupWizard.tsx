@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { EmploymentType, SearchSetup, Seniority, WorkMode } from '@/api/types';
-import { Button, Icon, ProgressBar, Row, Screen, Section, Text, TextField } from '@/components/ui';
+import { Button, Icon, ProgressBar, Row, Screen, SegmentedControl, Section, Text, TextField } from '@/components/ui';
 import { useT, type TKey } from '@/i18n';
 import { PAGE_MARGIN } from '@/theme';
 
@@ -16,7 +16,8 @@ function toggle<T>(list: T[], v: T): T[] {
 }
 
 export function emptySetup(): SearchSetup {
-  return { targetRole: '', location: '', currency: 'EUR', employmentTypes: [], workModes: [] };
+  // Currency and period are asked, not assumed; year matches the old placeholder.
+  return { targetRole: '', location: '', currency: '', salaryPeriod: 'year', employmentTypes: [], workModes: [] };
 }
 
 /**
@@ -43,7 +44,16 @@ export function SetupWizard({
 
   const finish = () => {
     const n = parseInt(salaryText.replace(/[^\d]/g, ''), 10);
-    onDone({ ...form, salaryMin: Number.isFinite(n) && n > 0 ? n : undefined });
+    const salaryMin = Number.isFinite(n) && n > 0 ? n : undefined;
+    const currency = form.currency.trim().toUpperCase();
+    // A minimum without a currency can't be compared honestly, so it isn't kept.
+    const keep = salaryMin !== undefined && /^[A-Z]{3}$/.test(currency);
+    onDone({
+      ...form,
+      salaryMin: keep ? salaryMin : undefined,
+      currency: keep ? currency : '',
+      salaryPeriod: keep ? (form.salaryPeriod ?? 'year') : undefined,
+    });
   };
 
   const check = (on: boolean) => (on ? <Icon name="check" size={18} color="accent" weight="semibold" /> : null);
@@ -146,6 +156,28 @@ export function SetupWizard({
               keyboardType="number-pad"
               returnKeyType="done"
             />
+            {salaryText.trim() ? (
+              <View style={{ gap: 12, marginTop: 12 }}>
+                <TextField
+                  label={t('setup.currency')}
+                  placeholder={t('setup.currencyPlaceholder')}
+                  hint={t('setup.currencyHint')}
+                  value={form.currency}
+                  onChangeText={(v) => setForm({ ...form, currency: v.replace(/[^a-zA-Z]/g, '').slice(0, 3).toUpperCase() })}
+                  autoCapitalize="characters"
+                  maxLength={3}
+                />
+                <SegmentedControl
+                  accessibilityLabel={t('setup.period')}
+                  options={[
+                    { value: 'month', label: t('setup.perMonth') },
+                    { value: 'year', label: t('setup.perYear') },
+                  ]}
+                  value={form.salaryPeriod ?? 'year'}
+                  onChange={(v) => setForm({ ...form, salaryPeriod: v })}
+                />
+              </View>
+            ) : null}
           </View>
         </>
       ) : null}
