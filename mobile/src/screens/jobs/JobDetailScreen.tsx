@@ -155,9 +155,11 @@ export default function JobDetailScreen() {
         )}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
           <Chip label={t('jobs.source', { label: j.source.label })} icon="link" size="sm" />
-          <Text variant="footnote" color="secondaryLabel">
-            {t('jobs.postedAgo', { when: formatRelative(j.postedAt) })}
-          </Text>
+          {j.postedAt ? (
+            <Text variant="footnote" color="secondaryLabel">
+              {t('jobs.postedAgo', { when: formatRelative(j.postedAt) })}
+            </Text>
+          ) : null}
         </View>
       </View>
 

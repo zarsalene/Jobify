@@ -173,6 +173,15 @@ export const mockRepository: Repository = {
           .map((i) => i.label);
       }
     },
+    async load() {
+      await delay(200);
+      return null;
+    },
+    async saveSetup(next) {
+      await delay(200);
+      setup = next;
+      return next;
+    },
   },
 
   cv: {
@@ -190,6 +199,34 @@ export const mockRepository: Repository = {
         items: SAMPLE_CV_ITEMS.map((i) => ({ ...i, status: 'pending' as const })),
       };
     },
+    async addItem(input) {
+      await delay(150);
+      const item: CvItem = { ...input, id: uid('cv'), confidence: 1, status: 'confirmed', origin: 'manual' };
+      cvItems = [...cvItems, item];
+      return item;
+    },
+    async updateItem(id, patch) {
+      await delay(150);
+      const cur = cvItems.find((i) => i.id === id);
+      if (!cur) throw new Error('CV item not found');
+      const next = { ...cur, ...patch };
+      cvItems = cvItems.map((i) => (i.id === id ? next : i));
+      return next;
+    },
+    async deleteItem(id) {
+      await delay(150);
+      cvItems = cvItems.filter((i) => i.id !== id);
+    },
+  },
+
+  account: {
+    async exportData() {
+      await delay(300);
+      return { sample: true, setup, cvItems, applications: [...applications.values()] };
+    },
+    async deleteAccount() {
+      await delay(300);
+    },
   },
 
   jobs: {
@@ -202,14 +239,14 @@ export const mockRepository: Repository = {
           [j.title, j.company, j.location, ...j.skills].some((f) => f.toLowerCase().includes(text)),
         );
       }
-      if (q.workModes?.length) list = list.filter((j) => q.workModes!.includes(j.workMode));
-      if (q.employmentTypes?.length) list = list.filter((j) => q.employmentTypes!.includes(j.employmentType));
-      if (q.seniority?.length) list = list.filter((j) => q.seniority!.includes(j.seniority));
+      if (q.workModes?.length) list = list.filter((j) => !!j.workMode && q.workModes!.includes(j.workMode));
+      if (q.employmentTypes?.length) list = list.filter((j) => !!j.employmentType && q.employmentTypes!.includes(j.employmentType));
+      if (q.seniority?.length) list = list.filter((j) => !!j.seniority && q.seniority!.includes(j.seniority));
       if (q.salaryMin) list = list.filter((j) => (yearly(j) ?? 0) >= q.salaryMin!);
       let items = list.map(toListItem);
       if (q.minLevel) items = items.filter((i) => LEVEL_ORDER[i.match.level] >= LEVEL_ORDER[q.minLevel!]);
       if (q.sort === 'newest') {
-        items.sort((a, b) => +new Date(b.job.postedAt) - +new Date(a.job.postedAt));
+        items.sort((a, b) => +new Date(b.job.postedAt ?? 0) - +new Date(a.job.postedAt ?? 0));
       } else {
         items.sort((a, b) => b.match.score - a.match.score);
       }
@@ -509,6 +546,16 @@ export const mockRepository: Repository = {
   },
 
   dev: {
+    reset() {
+      setup = undefined;
+      cvItems = [];
+      cvSkills = [];
+      jobs.clear();
+      applications.clear();
+      runs.clear();
+      approvals.clear();
+      failPrepRuns.clear();
+    },
     hydrate(snapshot: Partial<RepoSnapshot>) {
       snapshot.jobs?.forEach((j) => jobs.set(j.id, j));
       snapshot.applications?.forEach((a) => applications.set(a.id, a));

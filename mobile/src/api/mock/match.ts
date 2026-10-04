@@ -120,7 +120,7 @@ export function computeMatch(job: Job, setup: SearchSetup | undefined, cvSkills:
 
   let seniorityStatus: FactorStatus = 'unknown';
   let seniorityDetail = 'You have not set a seniority.';
-  if (setup?.seniority) {
+  if (setup?.seniority && job.seniority) {
     const d = Math.abs(LADDER.indexOf(setup.seniority) - LADDER.indexOf(job.seniority));
     seniorityStatus = d === 0 ? 'good' : d === 1 ? 'ok' : 'poor';
     seniorityDetail =
@@ -133,7 +133,7 @@ export function computeMatch(job: Job, setup: SearchSetup | undefined, cvSkills:
 
   let employmentStatus: FactorStatus = 'unknown';
   let employmentDetail = 'You have not set an employment type.';
-  if (setup?.employmentTypes?.length) {
+  if (setup?.employmentTypes?.length && job.employmentType) {
     const ok = setup.employmentTypes.includes(job.employmentType);
     employmentStatus = ok ? 'good' : 'poor';
     employmentDetail = ok ? 'Matches the employment type you chose.' : 'Different from the employment type you chose.';

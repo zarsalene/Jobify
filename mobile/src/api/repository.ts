@@ -51,12 +51,31 @@ export class ParsingError extends Error {
  */
 export interface Repository {
   profile: {
-    /** Tell the "server" the user's search setup + confirmed CV skills so matching can use them. */
+    /**
+     * Give the on-device document drafting (sample engine until AI drafting is connected) the
+     * user's own setup and CV items, so drafts are built from their facts and nothing else.
+     */
     sync(input: { setup?: SearchSetup; cvItems?: CvItem[] }): void;
+    /** The profile as the server holds it. Null when there is nothing stored yet. */
+    load(): Promise<{ setup?: SearchSetup; cv: ParsedCv | null } | null>;
+    saveSetup(setup: SearchSetup): Promise<SearchSetup>;
   };
   cv: {
-    /** Simulates upload + parsing. `onProgress` reports 0..1 for the upload part. */
-    parse(file: { name: string; size?: number }, onProgress?: (p: number) => void): Promise<ParsedCv>;
+    /** Upload + read. `onProgress` reports 0..1. `uri` is the picked file on the device. */
+    parse(
+      file: { name: string; size?: number; uri?: string; mimeType?: string },
+      onProgress?: (p: number) => void,
+    ): Promise<ParsedCv>;
+    /** Typed by the user, so it is stored as confirmed. */
+    addItem(input: Pick<CvItem, 'section' | 'label' | 'detail'>): Promise<CvItem>;
+    updateItem(id: string, patch: Partial<Pick<CvItem, 'label' | 'detail' | 'status'>>): Promise<CvItem>;
+    deleteItem(id: string): Promise<void>;
+  };
+  account: {
+    /** Everything stored about the user, as JSON. */
+    exportData(): Promise<unknown>;
+    /** Permanent. The server asks for the password again. */
+    deleteAccount(password: string): Promise<void>;
   };
   jobs: {
     list(q?: JobQuery): Promise<JobListItem[]>;
@@ -100,6 +119,8 @@ export interface Repository {
   };
   /** Developer switches that make the mock fail, to exercise error states. */
   dev: {
+    /** Empty every sample record (used when the real backend is in charge). */
+    reset(): void;
     /** Re-seed the in-memory "server" from the app's persisted cache after a restart. */
     hydrate(snapshot: Partial<RepoSnapshot>): void;
     setSimulateSendFailure(v: boolean): void;

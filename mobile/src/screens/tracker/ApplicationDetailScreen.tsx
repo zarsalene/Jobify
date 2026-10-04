@@ -32,8 +32,8 @@ export default function ApplicationDetailScreen() {
   const { t } = useT();
   const { colors } = useTheme();
   const app = data.use((s) => s.applications.find((a) => a.id === id));
-  const jobCached = data.use((s) => (app ? !!s.jobs[app.jobId] : false));
-  const runId = data.use((s) => (app ? s.runByJob[app.jobId] : undefined));
+  const jobCached = data.use((s) => (app?.jobId ? !!s.jobs[app.jobId] : false));
+  const runId = data.use((s) => (app?.jobId ? s.runByJob[app.jobId] : undefined));
 
   const [notes, setNotes] = useState(app?.notes ?? '');
   const [notesSaved, setNotesSaved] = useState(false);

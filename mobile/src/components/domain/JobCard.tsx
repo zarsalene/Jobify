@@ -10,9 +10,10 @@ import { MIN_TOUCH, radii, useTheme } from '@/theme';
 export function useJobLabels() {
   const { t } = useT();
   return {
-    workMode: (m: Job['workMode']) => t(`jobs.workmode_${m}` as TKey),
-    type: (m: Job['employmentType']) => t(`jobs.type_${m}` as TKey),
-    level: (m: Job['seniority']) => t(`jobs.level_${m}` as TKey),
+    // Undefined means the posting didn't say; shown as such rather than assumed.
+    workMode: (m: Job['workMode']) => (m ? t(`jobs.workmode_${m}` as TKey) : t('jobs.notStated')),
+    type: (m: Job['employmentType']) => (m ? t(`jobs.type_${m}` as TKey) : t('jobs.notStated')),
+    level: (m: Job['seniority']) => (m ? t(`jobs.level_${m}` as TKey) : t('jobs.notStated')),
   };
 }
 
@@ -61,7 +62,7 @@ export function JobCard({
   const a11y = [
     job.title,
     job.company,
-    `${job.location}, ${labels.workMode(job.workMode)}`,
+    job.workMode ? `${job.location}, ${labels.workMode(job.workMode)}` : job.location,
     match ? t('jobs.matchA11y', { level: t(`jobs.level${match.level[0].toUpperCase()}${match.level.slice(1)}` as TKey), score: match.score }) : '',
     job.salary ? formatSalary(job.salary) : t('jobs.salaryNone'),
   ]

@@ -60,7 +60,7 @@ export default function CareerPlanScreen() {
   const gaps = useMemo(() => {
     if (!cv) return [];
     const have = new Set(cv.items.filter((i) => i.section === 'skills').map((i) => i.label.trim().toLowerCase()));
-    const ids = new Set<string>([...savedIds, ...applications.map((a) => a.jobId)]);
+    const ids = new Set<string>([...savedIds, ...applications.flatMap((a) => (a.jobId ? [a.jobId] : []))]);
     const counts = new Map<string, { label: string; n: number }>();
     ids.forEach((id) => {
       jobs[id]?.skills.forEach((s) => {

@@ -28,17 +28,21 @@ function buildGroups(jobs: Job[]): Group[] {
     if (!s) return;
     const lo = s.min ?? s.max;
     const hi = s.max ?? s.min;
-    if (lo === undefined || hi === undefined) return;
+    // Only numeric salaries with a stated currency and period can be grouped and compared.
+    if (lo === undefined || hi === undefined || !s.currency || !s.period) return;
+    const currency = s.currency;
+    const period = s.period;
+    const posted = job.postedAt ?? '';
     const key = `${s.currency}|${s.period}`;
     const g = map.get(key);
     if (!g) {
-      map.set(key, { key, currency: s.currency, period: s.period, jobs: [job], low: lo, high: hi, sources: [s.source], latest: job.postedAt });
+      map.set(key, { key, currency, period, jobs: [job], low: lo, high: hi, sources: [s.source], latest: posted });
     } else {
       g.jobs.push(job);
       g.low = Math.min(g.low, lo);
       g.high = Math.max(g.high, hi);
       if (!g.sources.includes(s.source)) g.sources.push(s.source);
-      if (new Date(job.postedAt).getTime() > new Date(g.latest).getTime()) g.latest = job.postedAt;
+      if (posted && new Date(posted).getTime() > new Date(g.latest || 0).getTime()) g.latest = posted;
     }
   });
   return [...map.values()].sort((a, b) => b.jobs.length - a.jobs.length);
@@ -95,7 +99,7 @@ export default function SalaryInsightsScreen() {
               <Row
                 key={g.key}
                 title={`${job.title}, ${job.company}`}
-                subtitle={`${formatSalary(job.salary!)}\n${t('jobs.salarySource', { source: job.salary!.source })} - ${formatDate(job.postedAt)}`}
+                subtitle={`${formatSalary(job.salary!)}\n${t('jobs.salarySource', { source: job.salary!.source })} ${job.postedAt ? ` - ${formatDate(job.postedAt)}` : ''}`}
               />
             );
           })}

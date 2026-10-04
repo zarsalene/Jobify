@@ -23,7 +23,7 @@ export default function InterviewPrepScreen() {
   const [selectedId, setSelectedId] = useState<string | undefined>();
 
   const candidates = useMemo(() => {
-    const ids = new Set<string>([...savedIds, ...applications.map((a) => a.jobId)]);
+    const ids = new Set<string>([...savedIds, ...applications.flatMap((a) => (a.jobId ? [a.jobId] : []))]);
     return [...ids].map((id) => jobs[id]).filter((j): j is Job => !!j);
   }, [jobs, savedIds, applications]);
 

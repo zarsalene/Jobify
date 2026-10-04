@@ -2,7 +2,8 @@ import { localeStore, t } from '@/i18n';
 
 const loc = () => localeStore.get().locale;
 
-export function formatRelative(iso: string): string {
+export function formatRelative(iso: string | undefined): string {
+  if (!iso) return '';
   const diffMs = new Date(iso).getTime() - Date.now();
   const abs = Math.abs(diffMs);
   const units: [Intl.RelativeTimeFormatUnit, number][] = [
@@ -59,7 +60,17 @@ export function formatCountdown(iso: string): string {
   return `${Math.max(m, 1)}m`;
 }
 
-export function formatSalary(s: { min?: number; max?: number; currency: string; period: 'year' | 'month' | 'day' }): string {
-  const range = s.min && s.max && s.min !== s.max ? `${formatNumber(s.min)}-${formatNumber(s.max)}` : formatNumber((s.max ?? s.min) ?? 0);
-  return t('jobs.salaryStated', { range: `${s.currency} ${range}`, period: t(`jobs.period_${s.period}` as 'jobs.period_year') });
+export function formatSalary(s: {
+  min?: number;
+  max?: number;
+  currency?: string;
+  period?: 'year' | 'month' | 'day' | 'hour';
+  text?: string;
+}): string {
+  const top = s.max ?? s.min;
+  // Free-text salaries are quoted exactly, never converted into numbers.
+  if (top === undefined) return s.text ? t('jobs.salaryAsWritten', { text: s.text }) : t('jobs.salaryNone');
+  const range = s.min && s.max && s.min !== s.max ? `${formatNumber(s.min)}-${formatNumber(s.max)}` : formatNumber(top);
+  const amount = s.currency ? `${s.currency} ${range}` : range;
+  return s.period ? t('jobs.salaryStated', { range: amount, period: t(`jobs.period_${s.period}` as 'jobs.period_year') }) : amount;
 }
